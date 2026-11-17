@@ -3,11 +3,11 @@ Management command to import data from Excel (.xlsx) or CSV files.
 
 Usage:
     python manage.py import_data sample_data.xlsx
-    python manage.py import_data "myth db.csv"
+    python manage.py import_data equipment.csv
     python manage.py import_data sample_data.xlsx --dry-run
     python manage.py import_data users.csv --sheet users
 
-For the equipment CSV (myth db.csv format), expected columns are:
+For the equipment CSV (equipment.csv format), expected columns are:
     amc_contract_number, name, brand, model_number, serial_number,
     installation_date, warranty_expiry, amc_date, notes, amc_end_date,
     invoice_date, invoice_no., location, client, project, win_license
@@ -167,7 +167,7 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING('\n  DRY RUN - nothing will be saved\n'))
 
-        # Detect if this looks like the equipment/myth-db CSV format
+        # Detect if this looks like the equipment CSV format
         # (has a "project" column but no typical sheet names)
         sheet_map = {}
         for sheet_name, rows in all_sheets.items():
@@ -204,7 +204,7 @@ class Command(BaseCommand):
             ('projects',      self._import_projects),
             ('amc',           self._import_amc),
             ('equipment',     self._import_equipment),
-            ('equipment_csv', self._import_equipment_csv),   # myth db format
+            ('equipment_csv', self._import_equipment_csv),   # equipment CSV
             ('tasks',         self._import_tasks),
             ('expenses',      self._import_expenses),
             ('reports',       self._import_reports),
@@ -257,7 +257,7 @@ class Command(BaseCommand):
             self.counts[key][1] += 1
 
     # -----------------------------------------------------------------------
-    # Equipment CSV importer  (myth db.csv format)
+    # Equipment CSV importer  (equipment.csv format)
     #
     # Columns: amc_contract_number, name, brand, model_number, serial_number,
     #          installation_date, warranty_expiry, amc_date, notes, amc_end_date,

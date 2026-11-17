@@ -161,7 +161,7 @@ import io
 
 @login_required
 def import_csv_view(request):
-    """Upload a CSV file and import equipment records (myth db format)."""
+    """Upload a CSV file and import equipment records (equipment CSV format)."""
     if not (request.user.is_superuser or request.user.role in ('ADMIN', 'MANAGER')):
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied

@@ -68,6 +68,7 @@ DB_USER=ims_user
 DB_PASSWORD=<the password you set in step 3>
 DB_HOST=localhost
 DB_PORT=5432
+ALLOWED_HOSTS=ims.example.com
 CSRF_TRUSTED_ORIGINS=https://ims.example.com
 
 EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend

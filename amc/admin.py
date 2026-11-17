@@ -75,7 +75,7 @@ class AMCProjectResource(resources.ModelResource):
 
 class EquipmentResource(resources.ModelResource):
     """
-    Handles myth-db CSV format.
+    Handles the equipment CSV format.
 
     Key steps
     ---------

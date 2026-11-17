@@ -24,7 +24,6 @@ urlpatterns = [
     path('billing/', include('billing.urls')),
     path('reports/', include('reports.urls')),
     path('notifications/', include('notifications.urls')),
-    path('tenders/', include('tenders.urls')),
 
     # REST API URLs
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

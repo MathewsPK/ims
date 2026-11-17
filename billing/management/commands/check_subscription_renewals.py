@@ -6,8 +6,7 @@ Admins/Managers if no one is assigned).
 Run manually:
     python manage.py check_subscription_renewals
 
-Meant to be run once a day via a scheduler (cron, Render Cron Job,
-Railway Cron, or an external pinger hitting the /billing/cron/... view).
+Runs once a day from cron.
 """
 from django.core.mail import send_mail
 from django.conf import settings

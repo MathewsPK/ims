@@ -137,10 +137,8 @@ def mark_subscription_paid(request, pk):
 @csrf_exempt
 def cron_check_renewals(request):
     """
-    HTTP-triggerable version of `check_subscription_renewals` for hosts
-    without a native cron/scheduler (e.g. a free web-service-only Render plan).
-    Point an external pinger (Render Cron Job, GitHub Actions, cron-job.org)
-    at this URL once a day with ?token=<CRON_SECRET>.
+    HTTP version of `check_subscription_renewals` for hosts without cron.
+    Call once a day with ?token=<CRON_SECRET>.
     """
     token = request.GET.get('token', '')
     expected = getattr(settings, 'CRON_SECRET', '')

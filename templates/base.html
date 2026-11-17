@@ -710,13 +710,6 @@
       <span class="nav-label">Calendar</span>
     </a>
 
-    {% if user.is_superuser or user.role == 'ADMIN' or user.role == 'MANAGER' %}
-    <a href="{% url 'tenders:home' %}" class="sidebar-nav-link {% if request.resolver_match.app_name == 'tenders' %}active{% endif %}">
-      <i class="bi bi-broadcast nav-icon"></i>
-      <span class="nav-label">Tender Radar</span>
-    </a>
-    {% endif %}
-
     <div class="nav-section">AMC</div>
     <a href="{% url 'amc:amc_list' %}" class="sidebar-nav-link {% if request.resolver_match.app_name == 'amc' %}active{% endif %}">
       <i class="bi bi-tools nav-icon"></i>

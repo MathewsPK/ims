@@ -7,11 +7,7 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load variables from a local .env file into the process environment, if
-# present. Needed because nothing else does this on Linux/systemd — run.bat
-# does its own parsing on Windows, but a systemd service or a plain SSH shell
-# never reads .env automatically. Real environment variables (e.g. ones set
-# by systemd's EnvironmentFile=) always take priority over .env.
+# Minimal .env loader. Real environment variables take priority.
 def _load_dotenv(path):
     if not path.exists():
         return
@@ -28,11 +24,9 @@ _load_dotenv(BASE_DIR / '.env')
 # SECURITY
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production-xyz123')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = ['*']  # Allows all hosts — fine for LAN/local deployment and simple online hosting
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
 
-# CSRF: list every origin that can POST to this server.
-# run.bat auto-populates this from the detected LAN IP.
-# In production, set CSRF_TRUSTED_ORIGINS=https://your-app.onrender.com (or your domain) in the host's env vars.
+# Origins allowed to POST (set to your https domain in production)
 _csrf_default = 'http://localhost:8000,http://127.0.0.1:8000'
 CSRF_TRUSTED_ORIGINS = [
     o.strip()
@@ -40,19 +34,10 @@ CSRF_TRUSTED_ORIGINS = [
     if o.strip()
 ]
 
-# Tender Radar: folder of the separate tender_radar project (has pyproject.toml).
-# The "Search now & email" button runs <TENDER_RADAR_DIR>/.venv/.../tender-radar unless
-# TENDER_RADAR_CMD gives the full path to that executable.
-TENDER_RADAR_DIR = os.environ.get('TENDER_RADAR_DIR', '')
-TENDER_RADAR_CMD = os.environ.get('TENDER_RADAR_CMD', '')
-
-# Secret shared with an external cron pinger (Render Cron Job, GitHub Actions,
-# cron-job.org) that hits /billing/cron/check-renewals/?token=... once a day.
+# Token for /billing/cron/check-renewals/ (for hosts without cron)
 CRON_SECRET = os.environ.get('CRON_SECRET', '')
 
-# Behind a reverse proxy (Render, Railway, etc.) requests arrive over plain
-# HTTP internally; this tells Django to trust the proxy's X-Forwarded-Proto
-# header so HTTPS detection, secure cookies, and redirects work correctly.
+# Nginx terminates SSL and forwards X-Forwarded-Proto
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
@@ -88,7 +73,6 @@ INSTALLED_APPS = [
     'reports',
     'notifications',
     'dashboard',
-    'tenders',
 ]
 
 MIDDLEWARE = [
@@ -127,7 +111,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
 # Database — SQLite by default; set USE_POSTGRES=True in .env to switch,
-# or (on a host like Render/Railway) just set DATABASE_URL and it takes over.
+# or set DATABASE_URL and it takes over.
 USE_POSTGRES = os.environ.get('USE_POSTGRES', 'False') == 'True'
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 

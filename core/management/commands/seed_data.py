@@ -14,7 +14,7 @@ class Command(BaseCommand):
     help = "Seed the database with demo data"
 
     def handle(self, *args, **kwargs):
-        self.stdout.write("🌱  Seeding demo data…")
+        self.stdout.write("Seeding demo data...")
         self._users()
         self._projects()
         self._amc()
@@ -22,7 +22,7 @@ class Command(BaseCommand):
         self._expenses()
         self._reports()
         self._events()
-        self.stdout.write(self.style.SUCCESS("\n✅  Done! Login with admin@ims.local / admin123"))
+        self.stdout.write(self.style.SUCCESS("\nDone. Login with admin@ims.local / admin123"))
 
     # ── Users ──────────────────────────────────────────────────────────────
     def _users(self):
@@ -43,7 +43,7 @@ class Command(BaseCommand):
             if created:
                 u.set_password("admin123")
                 u.save()
-                self.stdout.write(f"  👤  Created {u.email}")
+                self.stdout.write(f"  Created {u.email}")
             self.users[spec["role"].lower() if spec["role"] != "ENGINEER" else ("engineer" if "2" not in spec["email"] else "engineer2")] = u
         # keep references
         self.admin    = self.users.get("admin")
@@ -71,7 +71,7 @@ class Command(BaseCommand):
             )
             if created:
                 p.assigned_users.set([self.manager, self.engineer, self.engineer2])
-                self.stdout.write(f"  📁  Created project: {p.name}")
+                self.stdout.write(f"  Created project: {p.name}")
             self.projects.append(p)
 
     # ── AMC ────────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ class Command(BaseCommand):
                 defaults=spec,
             )
             if created:
-                self.stdout.write(f"  🔧  Created AMC: {amc.project.name}")
+                self.stdout.write(f"  Created AMC: {amc.project.name}")
                 for i in range(random.randint(2, 4)):
                     Equipment.objects.create(
                         amc_project=amc,
@@ -124,7 +124,7 @@ class Command(BaseCommand):
                 defaults={**spec, "created_by": self.manager},
             )
             if created:
-                self.stdout.write(f"  ✅  Created task: {t.title}")
+                self.stdout.write(f"  Created task: {t.title}")
 
     # ── Expenses ──────────────────────────────────────────────────────────
     def _expenses(self):
@@ -144,7 +144,7 @@ class Command(BaseCommand):
                 defaults=spec,
             )
             if created:
-                self.stdout.write(f"  💰  Created expense: ₹{e.amount} by {e.user.name}")
+                self.stdout.write(f"  Created expense: ₹{e.amount} by {e.user.name}")
 
     # ── Reports ───────────────────────────────────────────────────────────
     def _reports(self):
@@ -170,7 +170,7 @@ class Command(BaseCommand):
                 defaults=spec,
             )
             if created:
-                self.stdout.write(f"  📝  Created report: {r.project.name} by {r.engineer.name}")
+                self.stdout.write(f"  Created report: {r.project.name} by {r.engineer.name}")
 
     # ── Events ────────────────────────────────────────────────────────────
     def _events(self):
@@ -193,4 +193,4 @@ class Command(BaseCommand):
                     ev.assigned_to.set([self.manager, self.engineer])
                     ev.save()
                 notify_event(ev)
-                self.stdout.write(f"  🔔  Created event: {ev.title}")
+                self.stdout.write(f"  Created event: {ev.title}")
