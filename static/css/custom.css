@@ -1,0 +1,257 @@
+/* ============================================================
+   IMS — custom.css  (dark theme supplement)
+   CSS variables are defined in base.html :root
+   ============================================================ */
+
+/* ── Muted text (Bootstrap default is too low-contrast on dark bg) ── */
+/* var(--text-2) already flips between dark/light values via body.light-mode in base.html */
+.text-muted {
+  color: var(--text-2, #7b92b0) !important;
+}
+
+/* ── bg-light (Bootstrap's near-white bg reads as light-on-light with themed text) ── */
+.bg-light {
+  background: var(--surface-3, #1a2840) !important;
+}
+
+/* ── Focus rings ──────────────────────────────────────────── */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: var(--accent, #3b9eff) !important;
+  box-shadow: 0 0 0 3px var(--accent-dim, rgba(59,158,255,0.10)) !important;
+  outline: none;
+}
+
+/* ── Textarea ─────────────────────────────────────────────── */
+textarea.form-control { resize: vertical; min-height: 80px; }
+
+/* ── Badges — status ──────────────────────────────────────── */
+.badge-status-planning  { background: var(--info-dim,   rgba(103,232,249,.10)); color: var(--info,    #67e8f9); }
+.badge-status-ongoing   { background: var(--success-dim,rgba(34,211,165,.10));  color: var(--success, #22d3a5); }
+.badge-status-completed { background: var(--purple-dim, rgba(196,181,253,.10)); color: var(--purple,  #c4b5fd); }
+.badge-status-on_hold   { background: var(--warning-dim,rgba(251,191,36,.10));  color: var(--warning, #fbbf24); }
+.badge-status-cancelled { background: var(--danger-dim, rgba(248,113,113,.10)); color: var(--danger,  #f87171); }
+
+/* ── Progress bars ────────────────────────────────────────── */
+.progress {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--surface-3, #1a2840);
+  overflow: hidden;
+}
+.progress-bar {
+  background: var(--accent, #3b9eff);
+  border-radius: 99px;
+  transition: width .4s ease;
+}
+.progress-bar-success { background: var(--success, #22d3a5); }
+.progress-bar-warning { background: var(--warning, #fbbf24); }
+.progress-bar-danger  { background: var(--danger,  #f87171); }
+
+/* ── Tables ───────────────────────────────────────────────── */
+.table {
+  font-size: 13.5px;
+  color: var(--text, #dce8f8);
+}
+.table thead th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-3, #3d526a);
+  background: var(--surface-2, #121e32) !important;
+  border-bottom: 1px solid var(--border, rgba(96,130,180,.12)) !important;
+  padding: 9px 14px;
+  white-space: nowrap;
+}
+.table tbody td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  border-color: var(--border, rgba(96,130,180,.12));
+  color: var(--text, #dce8f8);
+}
+.table-hover tbody tr:hover > * {
+  background: rgba(26,40,64,.6) !important;
+  color: var(--text, #dce8f8);
+}
+
+/* ── Cards ────────────────────────────────────────────────── */
+/* Bootstrap's own .card/.card-body set color:var(--bs-body-color)/var(--bs-card-color),
+   which we never define — so they fell back to Bootstrap's light-theme default (near-black)
+   and any plain, unclassed text inside a card (dates, names, etc. with no color utility class)
+   inherited that near-black color instead of this app's --text. Force it explicitly. */
+.card, .card-body {
+  color: var(--text, #dce8f8) !important;
+}
+.card {
+  background: var(--surface, #0d1525) !important;
+  border: 1px solid var(--border, rgba(96,130,180,.12)) !important;
+  border-radius: var(--r-lg, 16px) !important;
+  transition: border-color .2s, box-shadow .2s;
+}
+.card:hover { border-color: var(--border-md, rgba(96,130,180,.22)) !important; }
+.card-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border, rgba(96,130,180,.12)) !important;
+  padding: 13px 16px;
+  font-weight: 600;
+  color: var(--text, #dce8f8);
+  font-size: 13.5px;
+}
+
+/* ── List groups ──────────────────────────────────────────── */
+.list-group-item {
+  font-size: 13.5px;
+  background: transparent !important;
+  border-color: var(--border, rgba(96,130,180,.12)) !important;
+  color: var(--text, #dce8f8);
+  padding: 10px 14px;
+  transition: background .12s;
+}
+.list-group-item:hover { background: rgba(26,40,64,.5) !important; }
+.list-group-item.active {
+  background: var(--accent-dim, rgba(59,158,255,.10)) !important;
+  border-color: rgba(59,158,255,.3) !important;
+  color: var(--accent, #3b9eff);
+}
+
+/* ── Nav tabs ─────────────────────────────────────────────── */
+.nav-tabs { border-bottom: 1px solid var(--border, rgba(96,130,180,.12)); }
+.nav-tabs .nav-link {
+  font-size: 13.5px;
+  color: var(--text-2, #7b92b0);
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 8px 14px;
+  margin-bottom: -1px;
+  background: transparent;
+  transition: color .15s, border-color .15s;
+}
+.nav-tabs .nav-link:hover {
+  color: var(--text, #dce8f8);
+  border-bottom-color: rgba(59,158,255,.35);
+}
+.nav-tabs .nav-link.active {
+  color: var(--accent, #3b9eff);
+  border-bottom-color: var(--accent, #3b9eff);
+  font-weight: 600;
+  background: transparent;
+}
+
+/* ── Dropdowns ────────────────────────────────────────────── */
+.dropdown-menu {
+  background: var(--surface-2, #121e32) !important;
+  border: 1px solid var(--border-md, rgba(96,130,180,.22)) !important;
+  border-radius: var(--r-md, 12px) !important;
+  font-size: 13.5px;
+  padding: 6px !important;
+}
+.dropdown-item {
+  border-radius: var(--r-xs, 6px) !important;
+  padding: 7px 11px !important;
+  color: var(--text-2, #7b92b0) !important;
+  background: transparent !important;
+  transition: all .12s !important;
+}
+.dropdown-item:hover {
+  background: var(--surface-3, #1a2840) !important;
+  color: var(--text, #dce8f8) !important;
+}
+.dropdown-divider {
+  border-color: var(--border, rgba(96,130,180,.12)) !important;
+  margin: 4px 0 !important;
+}
+
+/* ── Pagination ───────────────────────────────────────────── */
+.pagination .page-link {
+  font-size: 13px;
+  color: var(--text-2, #7b92b0);
+  background: var(--surface-2, #121e32);
+  border-color: var(--border, rgba(96,130,180,.12));
+  border-radius: var(--r-xs, 6px) !important;
+  margin: 0 2px;
+  padding: .35rem .65rem;
+  transition: all .12s;
+}
+.pagination .page-link:hover {
+  background: var(--surface-3, #1a2840);
+  color: var(--text, #dce8f8);
+  border-color: var(--border-acc, rgba(59,158,255,.35));
+}
+.pagination .page-item.active .page-link {
+  background: var(--accent, #3b9eff);
+  border-color: var(--accent, #3b9eff);
+  color: #fff;
+}
+.pagination .page-item.disabled .page-link { opacity: .4; }
+
+/* ── Modals ───────────────────────────────────────────────── */
+.modal-content {
+  background: var(--surface-2, #121e32) !important;
+  border: 1px solid var(--border-md, rgba(96,130,180,.22)) !important;
+  border-radius: var(--r-lg, 16px) !important;
+  color: var(--text, #dce8f8);
+}
+.modal-header {
+  border-bottom: 1px solid var(--border, rgba(96,130,180,.12)) !important;
+  padding: 16px 20px;
+}
+.modal-title { font-size: 15px; font-weight: 600; color: var(--text, #dce8f8); }
+.modal-footer { border-top: 1px solid var(--border, rgba(96,130,180,.12)) !important; padding: 12px 20px; }
+.modal-backdrop.show { opacity: .7 !important; }
+
+/* ── Alerts ───────────────────────────────────────────────── */
+.alert { font-size: 13.5px; border-radius: var(--r-sm, 8px); }
+.alert-success { background: var(--success-dim); border: 1px solid rgba(34,211,165,.22); color: var(--success, #22d3a5); }
+.alert-danger,
+.alert-error   { background: var(--danger-dim);  border: 1px solid rgba(248,113,113,.22); color: var(--danger,  #f87171); }
+.alert-warning { background: var(--warning-dim); border: 1px solid rgba(251,191,36,.22);  color: var(--warning, #fbbf24); }
+.alert-info    { background: var(--info-dim);    border: 1px solid rgba(103,232,249,.22); color: var(--info,    #67e8f9); }
+
+/* ── Utility helpers ──────────────────────────────────────── */
+.text-accent      { color: var(--accent, #3b9eff) !important; }
+.bg-accent        { background: var(--accent, #3b9eff) !important; }
+.bg-accent-light  { background: var(--accent-dim, rgba(59,158,255,.10)) !important; }
+.section-divider  { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+.mono             { font-family: 'IBM Plex Mono', monospace; }
+
+/* ── FullCalendar dark overrides ──────────────────────────── */
+.fc { color: var(--text, #dce8f8) !important; }
+.fc-theme-standard td,
+.fc-theme-standard th,
+.fc-theme-standard .fc-scrollgrid { border-color: var(--border, rgba(96,130,180,.12)) !important; }
+.fc-col-header-cell-cushion,
+.fc-daygrid-day-number { color: var(--text-2, #7b92b0) !important; text-decoration: none; }
+.fc-daygrid-day.fc-day-today { background: rgba(59,158,255,.07) !important; }
+.fc-button-primary {
+  background: var(--surface-2) !important;
+  border-color: var(--border-md) !important;
+  color: var(--text-2) !important;
+}
+.fc-button-primary:hover {
+  background: var(--surface-3) !important;
+  color: var(--text) !important;
+}
+.fc-button-primary:not(:disabled).fc-button-active {
+  background: var(--accent-dim) !important;
+  border-color: var(--border-acc) !important;
+  color: var(--accent) !important;
+}
+
+/* ── Print ────────────────────────────────────────────────── */
+@media print {
+  #sidebar, #topbar { display: none !important; }
+  #main-content { margin-left: 0 !important; }
+  body { background: #fff; color: #000; }
+  .card, .table-card { box-shadow: none !important; border: 1px solid #ccc !important; background: #fff !important; }
+  .table { color: #000 !important; }
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .table-responsive { font-size: 12.5px; }
+  .card { border-radius: var(--r-sm, 8px) !important; }
+  .content-area { padding: 14px !important; }
+}

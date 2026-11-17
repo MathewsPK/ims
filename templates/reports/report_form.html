@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}Submit{% endif %} Report{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Edit Report{% else %}Submit AMC Report{% endif %}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'reports:report_list' %}">Reports</a></li>
+<li class="breadcrumb-item active">{% if form.instance.pk %}Edit{% else %}New{% endif %}</li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="form-card">
+      <h5 class="fw-bold mb-4">{% if form.instance.pk %}Edit Report{% else %}Submit Site / AMC Report{% endif %}</h5>
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label fw-semibold small">Project *</label>{{ form.project }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">AMC Contract</label>{{ form.amc_project }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">Visit Date *</label>{{ form.date }}</div>
+          <div class="col-12"><label class="form-label fw-semibold small">Work Done *</label>{{ form.work_done }}</div>
+          <div class="col-12"><label class="form-label fw-semibold small">Issues Found</label>{{ form.issues_found }}</div>
+          <div class="col-12"><label class="form-label fw-semibold small">Recommendations</label>{{ form.recommendations }}</div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Site Photos</label>
+            <input type="file" name="images" class="form-control" accept="image/*" multiple>
+            <div class="form-text">Select multiple images to upload together.</div>
+          </div>
+          <div class="col-12"><label class="form-label fw-semibold small">Client Signature</label>{{ form.client_signature }}</div>
+        </div>
+        <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+          <a href="{% url 'reports:report_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary px-4"><i class="bi bi-send me-1"></i>Submit Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

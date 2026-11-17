@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}AMC Contracts{% endblock %}
+{% block page_title %}AMC Contracts{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">AMC</li>{% endblock %}
+
+{% block content %}
+<!-- Alert banner for expiring AMCs -->
+{% if expiring_count %}
+<div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <div>
+    <strong>{{ expiring_count }} contract{{ expiring_count|pluralize }}</strong> expiring within 30 days.
+    <a href="?status=expiring" class="alert-link ms-1">View expiring →</a>
+  </div>
+</div>
+{% endif %}
+{% if expired_count %}
+<div class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">
+  <i class="bi bi-x-circle-fill"></i>
+  <div><strong>{{ expired_count }} contract{{ expired_count|pluralize }}</strong> already expired.</div>
+</div>
+{% endif %}
+
+<!-- Toolbar -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'amc:amc_list' %}" class="btn btn-sm {% if not selected_status %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+    <a href="?status=active" class="btn btn-sm {% if selected_status == 'active' %}btn-success{% else %}btn-outline-success{% endif %}">Active</a>
+    <a href="?status=expiring" class="btn btn-sm {% if selected_status == 'expiring' %}btn-warning{% else %}btn-outline-warning{% endif %}">Expiring Soon</a>
+    <a href="?status=expired" class="btn btn-sm {% if selected_status == 'expired' %}btn-danger{% else %}btn-outline-danger{% endif %}">Expired</a>
+  </div>
+  {% if user.can_manage_projects %}
+  <a href="{% url 'amc:import_csv' %}" class="btn btn-outline-secondary btn-sm me-2"><i class="bi bi-upload me-1"></i>Import CSV</a>
+  <a href="{% url 'amc:amc_create' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg me-1"></i>New Contract
+  </a>
+  {% endif %}
+</div>
+
+<!-- Search -->
+<form method="get" class="row g-2 mb-4">
+  <div class="col-md-5">
+    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search project name or contract number…">
+  </div>
+  <input type="hidden" name="status" value="{{ selected_status }}">
+  <div class="col-auto">
+    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+    <a href="{% url 'amc:amc_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a>
+  </div>
+</form>
+
+{% if amc_projects %}
+<div class="table-card">
+  <table class="table table-hover mb-0">
+    <thead>
+      <tr>
+        <th>Project</th>
+        <th>Contract #</th>
+        <th>Start</th>
+        <th>Expiry</th>
+        <th>Status</th>
+        <th>Equipment</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for amc in amc_projects %}
+      <tr class="ims-row" onclick="window.location='{% url 'amc:amc_detail' amc.pk %}'">
+        <td>
+          <span class="fw-semibold">{{ amc.project.name }}</span>
+          <div class="text-muted small">{{ amc.project.client }}</div>
+        </td>
+        <td class="text-muted small">{{ amc.contract_number|default:"—" }}</td>
+        <td class="small">{{ amc.amc_start_date|date:"d M Y" }}</td>
+        <td class="small {% if amc.is_expired %}text-danger fw-bold{% elif amc.is_expiring_soon %}text-warning fw-bold{% endif %}">
+          {{ amc.amc_end_date|date:"d M Y" }}
+        </td>
+        <td>
+          {% if amc.is_expired %}
+            <span class="badge bg-danger">Expired</span>
+          {% elif amc.is_expiring_soon %}
+            <span class="badge bg-warning text-dark">{{ amc.days_to_expiry }}d left</span>
+          {% elif amc.is_active %}
+            <span class="badge bg-success">Active</span>
+          {% else %}
+            <span class="badge bg-secondary">Upcoming</span>
+          {% endif %}
+        </td>
+        <td class="small">{{ amc.equipment.count }}</td>
+        <td>
+          <div class="d-flex gap-1 ims-action" onclick="event.stopPropagation()">
+            {% if user.can_manage_projects %}
+            <a href="{% url 'amc:amc_update' amc.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'amc:amc_delete' amc.pk %}" class="btn btn-sm btn-outline-danger py-0 px-2"><i class="bi bi-trash"></i></a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ selected_status }}">Previous</a></li>{% endif %}
+    <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ selected_status }}">Next</a></li>{% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-tools fs-1"></i>
+  <p class="mt-3">No AMC contracts found.</p>
+  {% if user.can_manage_projects %}
+  <a href="{% url 'amc:amc_create' %}" class="btn btn-primary">Create First Contract</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

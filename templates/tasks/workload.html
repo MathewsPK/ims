@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Workload{% endblock %}
+{% block page_title %}Team Workload{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'tasks:task_list' %}">Tasks</a></li>
+<li class="breadcrumb-item active">Workload</li>
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+  <div class="card-body">
+    <canvas id="workloadChart" style="max-height:360px;"></canvas>
+  </div>
+</div>
+
+<div class="table-card">
+  <table class="table mb-0">
+    <thead>
+      <tr>
+        <th>Team Member</th>
+        <th>Role</th>
+        <th>Active Projects</th>
+        <th>Pending</th>
+        <th>In Progress</th>
+        <th>Completed</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users_data %}
+      <tr>
+        <td class="fw-semibold">{{ u.name|default:u.email }}</td>
+        <td><span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">{{ u.get_role_display }}</span></td>
+        <td>
+          {% for proj in u.active_projects %}
+            <a href="{% url 'projects:project_detail' proj.pk %}" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none me-1" style="font-size:11px;">
+              {{ proj.name }}
+            </a>
+          {% empty %}
+            <span class="text-muted small">—</span>
+          {% endfor %}
+        </td>
+        <td><span class="badge bg-secondary-subtle text-secondary">{{ u.pending }}</span></td>
+        <td><span class="badge bg-primary-subtle text-primary">{{ u.in_progress }}</span></td>
+        <td><span class="badge bg-success-subtle text-success">{{ u.completed }}</span></td>
+        <td class="fw-bold">{{ u.pending|add:u.in_progress|add:u.completed }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="text-center text-muted py-4">No data</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const labels = [{% for u in users_data %}"{{ u.name|default:u.email|escapejs }}",{% endfor %}];
+const pending  = [{% for u in users_data %}{{ u.pending }},{% endfor %}];
+const inProgress = [{% for u in users_data %}{{ u.in_progress }},{% endfor %}];
+const completed = [{% for u in users_data %}{{ u.completed }},{% endfor %}];
+
+new Chart(document.getElementById('workloadChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      { label: 'Pending',     data: pending,    backgroundColor: '#94a3b8' },
+      { label: 'In Progress', data: inProgress, backgroundColor: '#3b82f6' },
+      { label: 'Completed',   data: completed,  backgroundColor: '#10b981' },
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } } },
+    plugins: { legend: { position: 'top' } },
+  }
+});
+</script>
+{% endblock %}

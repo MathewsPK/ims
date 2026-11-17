@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Report Detail{% endblock %}
+{% block page_title %}AMC Report{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'reports:report_list' %}">Reports</a></li>
+<li class="breadcrumb-item active">Detail</li>
+{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+          <div>
+            <h5 class="fw-bold mb-1">{{ report.project.name }}</h5>
+            <div class="text-muted small">{{ report.date|date:"d F Y" }} · {{ report.engineer.name }}</div>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            {% if report.status == 'SUBMITTED' and report.engineer == user %}
+            <a href="{% url 'reports:report_update' report.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Edit</a>
+            {% endif %}
+            {% if user.can_view_all_reports and report.status == 'SUBMITTED' %}
+            <a href="{% url 'reports:report_review' report.pk %}" class="btn btn-sm btn-warning"><i class="bi bi-check2 me-1"></i>Review</a>
+            {% endif %}
+            <span class="badge bg-{{ report.status_color }}-subtle text-{{ report.status_color }} border border-{{ report.status_color }}-subtle fs-6">
+              {{ report.get_status_display }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <h6 class="fw-semibold text-muted small text-uppercase mb-2">Work Done</h6>
+          <p class="mb-0">{{ report.work_done }}</p>
+        </div>
+
+        {% if report.issues_found %}
+        <div class="mb-4 border-top pt-3">
+          <h6 class="fw-semibold text-warning small text-uppercase mb-2"><i class="bi bi-exclamation-triangle me-1"></i>Issues Found</h6>
+          <p class="mb-0">{{ report.issues_found }}</p>
+        </div>
+        {% endif %}
+
+        {% if report.recommendations %}
+        <div class="mb-4 border-top pt-3">
+          <h6 class="fw-semibold text-info small text-uppercase mb-2"><i class="bi bi-lightbulb me-1"></i>Recommendations</h6>
+          <p class="mb-0">{{ report.recommendations }}</p>
+        </div>
+        {% endif %}
+
+        {% if report.review_note %}
+        <div class="border-top pt-3 bg-light rounded p-3 mt-3">
+          <div class="text-muted small mb-1">Review Note from {{ report.reviewed_by.name }}</div>
+          <p class="mb-0">{{ report.review_note }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Photo gallery -->
+        {% if report.images.all %}
+        <div class="border-top pt-3 mt-3">
+          <h6 class="fw-semibold small text-uppercase mb-3">Photos ({{ report.images.count }})</h6>
+          <div class="row g-2">
+            {% for img in report.images.all %}
+            <div class="col-4 col-md-3">
+              <a href="{{ img.image.url }}" target="_blank">
+                <img src="{{ img.image.url }}" class="img-fluid rounded" style="height:90px;width:100%;object-fit:cover;" alt="{{ img.caption }}">
+              </a>
+              {% if img.caption %}<p class="small text-muted mt-1 mb-0">{{ img.caption }}</p>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if report.client_signature %}
+        <div class="border-top pt-3 mt-3">
+          <div class="text-muted small mb-2">Client Signature</div>
+          <img src="{{ report.client_signature.url }}" style="max-height:100px;" class="border rounded p-1" alt="Signature">
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

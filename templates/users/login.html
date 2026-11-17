@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block auth_content %}
+<style>
+  body {
+    background: #070b14;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Outfit', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,158,255,0.08) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 50% at 80% 90%, rgba(167,139,250,0.05) 0%, transparent 50%);
+  }
+
+  .login-wrap {
+    width: 100%; max-width: 420px;
+    padding: 1.25rem;
+    position: relative; z-index: 1;
+  }
+
+  .login-card {
+    background: #0d1525;
+    border: 1px solid rgba(96,130,180,0.18);
+    border-radius: 20px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(59,158,255,0.05);
+    padding: 2.5rem 2.5rem 2.25rem;
+  }
+
+  .login-brand-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, #3b9eff 0%, #6366f1 100%);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.1rem;
+    box-shadow: 0 0 28px rgba(59,158,255,0.35);
+  }
+  .login-brand-icon i { color: #fff; font-size: 22px; }
+
+  .login-title {
+    font-size: 19px; font-weight: 700;
+    color: #dce8f8;
+    text-align: center; letter-spacing: -.3px;
+    margin-bottom: 4px;
+  }
+  .login-sub {
+    font-size: 13px; color: #3d526a;
+    text-align: center; margin-bottom: 2rem;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: .02em;
+  }
+
+  .login-card .form-label {
+    font-size: 12.5px; font-weight: 600;
+    color: #7b92b0; margin-bottom: 5px;
+  }
+  .login-card .form-control {
+    font-size: 13.5px;
+    border: 1px solid rgba(96,130,180,0.15);
+    border-radius: 9px;
+    padding: .55rem .85rem;
+    color: #dce8f8;
+    background: #121e32 !important;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .login-card .form-control:focus {
+    border-color: #3b9eff;
+    box-shadow: 0 0 0 3px rgba(59,158,255,0.12);
+    background: #121e32 !important;
+    outline: none;
+    color: #dce8f8;
+  }
+  .login-card .form-control::placeholder { color: #3d526a; }
+
+  .btn-signin {
+    background: linear-gradient(135deg, #3b9eff 0%, #2b8fee 100%);
+    border: none;
+    border-radius: 9px;
+    color: #fff;
+    font-size: 14px; font-weight: 600;
+    padding: .65rem 1rem;
+    width: 100%; cursor: pointer;
+    transition: all .18s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 18px rgba(59,158,255,0.3);
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+  .btn-signin:hover {
+    box-shadow: 0 6px 24px rgba(59,158,255,0.45);
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+  }
+  .btn-signin:active { transform: translateY(0); box-shadow: 0 2px 10px rgba(59,158,255,0.2); }
+
+  .forgot-link {
+    font-size: 12px; color: #3b9eff;
+    text-decoration: none; transition: opacity .15s;
+  }
+  .forgot-link:hover { opacity: .7; }
+
+  .login-error {
+    background: rgba(248,113,113,.1);
+    border: 1px solid rgba(248,113,113,.22);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 13px; padding: 10px 12px;
+    margin-bottom: 1rem;
+  }
+
+  .login-footer {
+    font-size: 12px; color: #3d526a;
+    text-align: center; margin-top: 1.25rem;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+</style>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand-icon">
+      <i class="bi bi-grid-3x3-gap-fill"></i>
+    </div>
+    <div class="login-title">Internal Management System</div>
+    <div class="login-sub">Sign in to continue</div>
+
+    {% if form.non_field_errors %}
+    <div class="login-error">
+      <i class="bi bi-exclamation-circle me-1"></i>{{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label class="form-label">Email address</label>
+        {{ form.username }}
+      </div>
+
+      <div class="mb-1">
+        <label class="form-label">Password</label>
+        {{ form.password }}
+      </div>
+      <div class="text-end mb-4">
+        <a href="{% url 'users:password_reset' %}" class="forgot-link">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn-signin">
+        <i class="bi bi-box-arrow-in-right"></i>Sign in
+      </button>
+    </form>
+  </div>
+  <p class="login-footer">© {% now "Y" %} IMS — All rights reserved</p>
+</div>
+{% endblock %}

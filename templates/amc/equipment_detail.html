@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}{{ eq.name }} — Equipment{% endblock %}
+{% block page_title %}Equipment Details{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'amc:amc_list' %}">AMC</a></li>
+<li class="breadcrumb-item"><a href="{% url 'amc:amc_detail' eq.amc_project.pk %}">{{ eq.amc_project.project.name }}</a></li>
+<li class="breadcrumb-item active">{{ eq.name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h4 class="fw-bold mb-1">{{ eq.name }}</h4>
+            <div class="text-muted">{{ eq.amc_project.project.name }}{% if eq.amc_project.project.client %} · {{ eq.amc_project.project.client }}{% endif %}</div>
+          </div>
+          {% if user.can_manage_projects %}
+          <div class="d-flex gap-2">
+            <a href="{% url 'amc:equipment_update' eq.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Edit</a>
+            <a href="{% url 'amc:equipment_delete' eq.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete</a>
+          </div>
+          {% endif %}
+        </div>
+
+        <p class="text-muted small fw-semibold text-uppercase mb-2">Device Details</p>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-4">
+            <div class="text-muted small">Brand</div>
+            <div class="fw-semibold">{{ eq.brand|default:"—" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-muted small">Model Number</div>
+            <div class="fw-semibold">{{ eq.model_number|default:"—" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-muted small">Serial Number</div>
+            <div class="fw-semibold font-monospace">{{ eq.serial_number|default:"—" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-muted small">Location</div>
+            <div class="fw-semibold">{{ eq.location|default:"—" }}</div>
+          </div>
+        </div>
+
+        <div class="border-top pt-3 mb-3">
+          <p class="text-muted small fw-semibold text-uppercase mb-2">Dates</p>
+          <div class="row g-3">
+            <div class="col-sm-4">
+              <div class="text-muted small">Installation Date</div>
+              <div>{{ eq.installation_date|date:"d M Y"|default:"—" }}</div>
+            </div>
+            <div class="col-sm-4">
+              <div class="text-muted small">Warranty Ends</div>
+              <div class="{% if eq.warranty_days_left is not None and eq.warranty_days_left < 30 %}text-warning fw-bold{% endif %}{% if eq.warranty_days_left is not None and eq.warranty_days_left < 0 %}text-danger fw-bold{% endif %}">
+                {{ eq.warranty_expiry|date:"d M Y"|default:"—" }}
+                {% if eq.warranty_days_left is not None %}
+                  <div class="text-muted" style="font-size:.75rem;">
+                    {% if eq.warranty_days_left < 0 %}Expired {{ eq.warranty_days_left|slice:"1:" }} days ago{% else %}{{ eq.warranty_days_left }} days left{% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="text-muted small">AMC Start Date</div>
+              <div>{{ eq.amc_date|date:"d M Y"|default:"—" }}</div>
+            </div>
+            <div class="col-sm-4">
+              <div class="text-muted small">AMC End Date</div>
+              <div class="{% if eq.amc_end_date and eq.amc_end_date < today %}text-danger fw-bold{% endif %}">
+                {{ eq.amc_end_date|date:"d M Y"|default:"—" }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-top pt-3 mb-3">
+          <p class="text-muted small fw-semibold text-uppercase mb-2">Invoice</p>
+          <div class="row g-3">
+            <div class="col-sm-4">
+              <div class="text-muted small">Invoice No.</div>
+              <div class="fw-semibold">{{ eq.invoice_no|default:"—" }}</div>
+            </div>
+            <div class="col-sm-4">
+              <div class="text-muted small">Invoice Date</div>
+              <div>{{ eq.invoice_date|date:"d M Y"|default:"—" }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-top pt-3 mb-3">
+          <p class="text-muted small fw-semibold text-uppercase mb-2">Software</p>
+          <div class="text-muted small">Windows License Key</div>
+          {% if eq.win_license %}
+            <code class="small user-select-all">{{ eq.win_license }}</code>
+          {% else %}<div>—</div>{% endif %}
+        </div>
+
+        {% if eq.notes %}
+        <div class="border-top pt-3">
+          <p class="text-muted small fw-semibold text-uppercase mb-2">Notes</p>
+          <p class="mb-0">{{ eq.notes|linebreaksbr }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm" style="border-radius:14px;">
+      <div class="card-header bg-transparent fw-semibold">Record Info</div>
+      <div class="card-body">
+        <div class="mb-2">
+          <div class="text-muted small">AMC Contract</div>
+          <a href="{% url 'amc:amc_detail' eq.amc_project.pk %}">{{ eq.amc_project.project.name }}{% if eq.amc_project.contract_number %} ({{ eq.amc_project.contract_number }}){% endif %}</a>
+        </div>
+        <div class="mb-2">
+          <div class="text-muted small">Added</div>
+          <div>{{ eq.created_at|date:"d M Y, H:i" }}</div>
+        </div>
+        <div>
+          <div class="text-muted small">Last Updated</div>
+          <div>{{ eq.updated_at|date:"d M Y, H:i" }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

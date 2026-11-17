@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Import Projects{% endblock %}
+{% block page_title %}Import Projects from CSV{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'projects:project_list' %}">Projects</a></li>
+<li class="breadcrumb-item active">Import CSV</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <!-- Upload card -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-body p-4">
+        <h5 class="fw-bold mb-1">Upload CSV File</h5>
+        <p class="text-muted small mb-3">
+          Your CSV must have a <strong>name</strong> column. Other supported columns:
+          <code>client</code>, <code>location</code>, <code>status</code>,
+          <code>start_date</code>, <code>end_date</code>, <code>description</code>.
+          <br>If a project with the same name already exists it will be <strong>updated</strong>;
+          otherwise a new project is <strong>created</strong>.
+        </p>
+        <a href="{% url 'projects:import_csv' %}?sample=1" class="btn btn-outline-secondary btn-sm mb-3">
+          <i class="bi bi-download me-1"></i>Download Sample CSV Template
+        </a>
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">CSV File</label>
+            <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="dry_run" id="dry_run">
+            <label class="form-check-label small" for="dry_run">
+              Dry run — preview results without saving anything
+            </label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-upload me-1"></i>Import
+            </button>
+            <a href="{% url 'projects:project_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Results card -->
+    {% if results is not None %}
+    <div class="card border-0 shadow-sm" style="border-radius:14px;">
+      <div class="card-body p-4">
+        <h6 class="fw-bold mb-3">
+          Import Results
+          {% if results.dry_run %}
+          <span class="badge bg-warning text-dark ms-2">Dry Run — nothing saved</span>
+          {% endif %}
+        </h6>
+        <div class="row g-3 mb-3">
+          <div class="col-4">
+            <div class="p-3 rounded text-center" style="background:#f0fdf4;">
+              <div class="fs-4 fw-bold text-success">{{ results.created }}</div>
+              <div class="small text-muted">{% if results.dry_run %}Would create{% else %}Created{% endif %}</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="p-3 rounded text-center" style="background:#eff6ff;">
+              <div class="fs-4 fw-bold text-primary">{{ results.updated }}</div>
+              <div class="small text-muted">{% if results.dry_run %}Would update{% else %}Updated{% endif %}</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="p-3 rounded text-center" style="background:#fafafa;">
+              <div class="fs-4 fw-bold text-secondary">{{ results.skipped }}</div>
+              <div class="small text-muted">Skipped</div>
+            </div>
+          </div>
+        </div>
+
+        {% if results.errors %}
+        <div class="alert alert-warning p-3" style="border-radius:10px;">
+          <div class="fw-semibold small mb-2">Warnings / Errors</div>
+          <ul class="mb-0 small">
+            {% for err in results.errors %}
+            <li>{{ err }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        {% if not results.dry_run and results.created or not results.dry_run and results.updated %}
+        <a href="{% url 'projects:project_list' %}" class="btn btn-success btn-sm">
+          <i class="bi bi-check2 me-1"></i>View Projects
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

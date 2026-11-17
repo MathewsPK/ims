@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}{{ amc.project.name }} — AMC{% endblock %}
+{% block page_title %}AMC Contract{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'amc:amc_list' %}">AMC</a></li>
+<li class="breadcrumb-item active">{{ amc.project.name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <!-- Contract card -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h4 class="fw-bold mb-1">{{ amc.project.name }}</h4>
+            <div class="text-muted">{{ amc.project.client }}</div>
+          </div>
+          <div class="d-flex gap-2">
+            {% if user.can_manage_projects %}
+            <a href="{% url 'amc:amc_update' amc.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Edit</a>
+            {% endif %}
+            {% if amc.is_expired %}
+              <span class="badge bg-danger fs-6">Expired</span>
+            {% elif amc.is_expiring_soon %}
+              <span class="badge bg-warning text-dark fs-6">{{ amc.days_to_expiry }} days left</span>
+            {% elif amc.is_active %}
+              <span class="badge bg-success fs-6">Active</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="row g-3">
+          {% if amc.contract_number %}
+          <div class="col-sm-4">
+            <div class="text-muted small">Contract #</div>
+            <div class="fw-semibold">{{ amc.contract_number }}</div>
+          </div>
+          {% endif %}
+          <div class="col-sm-4">
+            <div class="text-muted small">Start Date</div>
+            <div>{{ amc.amc_start_date|date:"d M Y" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-muted small">Expiry Date</div>
+            <div class="{% if amc.is_expired %}text-danger fw-bold{% elif amc.is_expiring_soon %}text-warning fw-bold{% endif %}">
+              {{ amc.amc_end_date|date:"d M Y" }}
+            </div>
+          </div>
+          {% if amc.contract_value %}
+          <div class="col-sm-4">
+            <div class="text-muted small">Contract Value</div>
+            <div class="fw-semibold">₹{{ amc.contract_value|floatformat:0 }}</div>
+          </div>
+          {% endif %}
+        </div>
+        {% if amc.notes %}
+        <div class="border-top mt-3 pt-3">
+          <div class="text-muted small mb-1">Notes</div>
+          <p class="mb-0">{{ amc.notes }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Equipment -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Equipment ({{ equipment_list.count }})</span>
+        {% if user.can_manage_projects %}
+        <a href="{% url 'amc:equipment_create' %}?amc={{ amc.pk }}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-plus me-1"></i>Add Equipment
+        </a>
+        {% endif %}
+      </div>
+      {% if equipment_list %}
+      <div class="table-responsive">
+        <table class="table mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Name</th>
+              <th>Brand / Model</th>
+              <th>Serial #</th>
+              <th>Location</th>
+              <th>Installed</th>
+              <th>Warranty Ends</th>
+              <th>AMC End</th>
+              <th>Invoice No.</th>
+              <th>Win License</th>
+              {% if user.can_manage_projects %}<th></th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for eq in equipment_list %}
+            <tr>
+              <td class="fw-semibold"><a href="{% url 'amc:equipment_detail' eq.pk %}">{{ eq.name }}</a></td>
+              <td class="text-muted">
+                {{ eq.brand|default:"—" }}
+                {% if eq.model_number %}<div class="text-muted" style="font-size:.75rem;">{{ eq.model_number }}</div>{% endif %}
+              </td>
+              <td class="font-monospace text-muted">{{ eq.serial_number|default:"—" }}</td>
+              <td>{{ eq.location|default:"—" }}</td>
+              <td>{{ eq.installation_date|date:"d M Y"|default:"—" }}</td>
+              <td class="{% if eq.warranty_days_left is not None and eq.warranty_days_left < 30 %}text-warning fw-bold{% endif %}{% if eq.warranty_days_left is not None and eq.warranty_days_left < 0 %}text-danger fw-bold{% endif %}">
+                {{ eq.warranty_expiry|date:"d M Y"|default:"—" }}
+              </td>
+              <td>
+                {% if eq.amc_end_date %}
+                  <span class="{% if eq.amc_end_date < today %}text-danger fw-bold{% endif %}">{{ eq.amc_end_date|date:"d M Y" }}</span>
+                {% else %}—{% endif %}
+              </td>
+              <td class="text-muted">
+                {{ eq.invoice_no|default:"—" }}
+                {% if eq.invoice_date %}<div style="font-size:.75rem;">{{ eq.invoice_date|date:"d M Y" }}</div>{% endif %}
+              </td>
+              <td>
+                {% if eq.win_license %}
+                  <code class="small user-select-all" title="{{ eq.win_license }}">{{ eq.win_license|truncatechars:20 }}</code>
+                {% else %}—{% endif %}
+              </td>
+              {% if user.can_manage_projects %}
+              <td>
+                <div class="d-flex gap-1">
+                  <a href="{% url 'amc:equipment_update' eq.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2"><i class="bi bi-pencil"></i></a>
+                  <a href="{% url 'amc:equipment_delete' eq.pk %}" class="btn btn-sm btn-outline-danger py-0 px-2"><i class="bi bi-trash"></i></a>
+                </div>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="p-4 text-center text-muted small">No equipment added yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Timeline sidebar -->
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm" style="border-radius:14px;">
+      <div class="card-header bg-transparent fw-semibold">Activity</div>
+      <div class="card-body">
+        {% if timeline %}
+        <div class="timeline">
+          {% for entry in timeline %}
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="small">
+              <span class="fw-semibold">{{ entry.user.name|default:"System" }}</span>
+              <span class="text-muted"> {{ entry.description }}</span>
+              <div class="text-muted" style="font-size:.7rem;">{{ entry.timestamp|date:"d M Y, H:i" }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}<p class="text-muted small text-center mb-0">No activity yet</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

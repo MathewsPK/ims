@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Dashboard</li>{% endblock %}
+
+{% block extra_css %}
+<style>
+  .welcome-banner {
+    background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-3) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 22px 26px;
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .welcome-banner::before {
+    content: '';
+    position: absolute; top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,158,255,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .welcome-name {
+    font-size: 1.25rem; font-weight: 700; color: var(--text);
+    letter-spacing: -.2px;
+  }
+  .welcome-date {
+    font-size: 12.5px; color: var(--text-3);
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: .02em; margin-top: 2px;
+  }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--success-dim); border: 1px solid rgba(34,211,165,.2);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 11.5px; color: var(--success); font-weight: 500;
+  }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+
+  /* Stat grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  @media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px)  { .stats-grid { grid-template-columns: 1fr 1fr; } }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: border-color .22s, box-shadow .22s, transform .22s;
+    cursor: default;
+    position: relative; overflow: hidden;
+  }
+  .kpi-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--kpi-color, var(--accent));
+    opacity: 0;
+    transition: opacity .22s;
+  }
+  .kpi-card:hover {
+    border-color: var(--kpi-color, var(--accent));
+    box-shadow: 0 0 28px rgba(var(--kpi-r,59),var(--kpi-g,158),var(--kpi-b,255),0.15), var(--shadow);
+    transform: translateY(-2px);
+  }
+  .kpi-card:hover::after { opacity: 1; }
+
+  .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; }
+  .kpi-icon {
+    width: 42px; height: 42px;
+    border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    background: rgba(var(--kpi-r,59),var(--kpi-g,158),var(--kpi-b,255),0.12);
+    color: var(--kpi-color, var(--accent));
+  }
+  .kpi-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 2.1rem; font-weight: 600;
+    color: var(--text); line-height: 1;
+    letter-spacing: -.04em;
+  }
+  .kpi-value.currency { font-size: 1.5rem; }
+  .kpi-label { font-size: 12px; color: var(--text-2); font-weight: 400; margin-top: 4px; }
+
+  /* Section header inside cards */
+  .section-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-hd-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .section-hd-sub   { font-size: 11.5px; color: var(--text-3); margin-top: 1px; }
+
+  /* Task row */
+  .task-row {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 11px 14px; gap: 10px;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+  .task-row:last-child { border-bottom: none; }
+  .task-row:hover { background: rgba(26,40,64,.5); }
+  .task-title { font-size: 13.5px; font-weight: 500; color: var(--text); text-decoration: none !important; }
+  .task-title:hover { color: var(--accent); }
+  .task-sub  { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
+  .task-date { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+  /* Event row */
+  .event-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+  .event-row:last-child { border-bottom: none; }
+  .event-row:hover { background: rgba(26,40,64,.5); }
+  .event-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+
+  /* AMC row */
+  .amc-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+  .amc-row:last-child { border-bottom: none; }
+  .amc-row:hover { background: rgba(26,40,64,.5); }
+
+  /* Empty state */
+  .empty-state {
+    padding: 32px 20px; text-align: center;
+    color: var(--text-3);
+  }
+  .empty-state i { font-size: 2rem; margin-bottom: 10px; display: block; }
+  .empty-state p { font-size: 13px; margin: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Welcome banner -->
+<div class="welcome-banner">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div>
+      <div class="welcome-name">Welcome back, {{ user.name|default:user.email }}</div>
+      <div class="welcome-date">{{ today|date:"l, d F Y" }}</div>
+    </div>
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      System Online
+    </div>
+  </div>
+</div>
+
+<!-- KPI cards -->
+<div class="stats-grid">
+
+  <a href="{% url 'tasks:task_list' %}?status=active" class="kpi-card text-decoration-none" style="--kpi-color:#3b9eff;--kpi-r:59;--kpi-g:158;--kpi-b:255;cursor:pointer;">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-value">{{ tasks_by_status.in_progress|add:tasks_by_status.pending }}</div>
+        <div class="kpi-label">Active Tasks</div>
+      </div>
+      <div class="kpi-icon"><i class="bi bi-check2-square"></i></div>
+    </div>
+  </a>
+
+  <a href="{% url 'tasks:task_list' %}?status=overdue" class="kpi-card text-decoration-none" style="--kpi-color:#f87171;--kpi-r:248;--kpi-g:113;--kpi-b:113;cursor:pointer;">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-value">{{ tasks_by_status.overdue }}</div>
+        <div class="kpi-label">Overdue</div>
+      </div>
+      <div class="kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
+    </div>
+  </a>
+
+  <a href="{% url 'projects:project_ongoing' %}" class="kpi-card text-decoration-none" style="--kpi-color:#22d3a5;--kpi-r:34;--kpi-g:211;--kpi-b:165;cursor:pointer;">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-value">{{ projects_by_status.ongoing }}</div>
+        <div class="kpi-label">Active Projects</div>
+      </div>
+      <div class="kpi-icon"><i class="bi bi-folder2-open"></i></div>
+    </div>
+  </a>
+
+  <a href="{% url 'amc:amc_list' %}?status=expiring" class="kpi-card text-decoration-none" style="--kpi-color:#fbbf24;--kpi-r:251;--kpi-g:191;--kpi-b:36;cursor:pointer;">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-value">{{ amc_expiring|length }}</div>
+        <div class="kpi-label">AMC Expiring Soon</div>
+      </div>
+      <div class="kpi-icon"><i class="bi bi-tools"></i></div>
+    </div>
+  </a>
+
+</div>
+
+<!-- Second KPI row -->
+<div class="stats-grid" style="margin-bottom:22px;">
+
+  <a href="{% url 'expenses:expense_list' %}" class="kpi-card text-decoration-none" style="--kpi-color:#67e8f9;--kpi-r:103;--kpi-g:232;--kpi-b:249;cursor:pointer;">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-value currency">₹{{ my_monthly_spend|floatformat:0 }}</div>
+        <div class="kpi-label">Monthly Spend</div>
+      </div>
+      <div class="kpi-icon"><i class="bi bi-currency-rupee"></i></div>
+    </div>
+  </a>
+
+  {% if user.can_approve_expenses %}
+  <a href="{% url 'expenses:expense_list' %}?status=pending" class="kpi-card text-decoration-none" style="--kpi-color:#fbbf24;--kpi-r:251;--kpi-g:191;--kpi-b:36;cursor:pointer;">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-value">{{ pending_expense_count }}</div>
+        <div class="kpi-label">Pending Expenses</div>
+      </div>
+      <div class="kpi-icon"><i class="bi bi-clock-history"></i></div>
+    </div>
+  </a>
+  {% endif %}
+
+  {% if pending_reports %}
+  <a href="{% url 'reports:report_list' %}" class="kpi-card text-decoration-none" style="--kpi-color:#c4b5fd;--kpi-r:196;--kpi-g:181;--kpi-b:253;cursor:pointer;">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-value">{{ pending_reports }}</div>
+        <div class="kpi-label">Pending Reports</div>
+      </div>
+      <div class="kpi-icon"><i class="bi bi-file-earmark-text"></i></div>
+    </div>
+  </a>
+  {% endif %}
+
+  <a href="{% url 'tasks:task_list' %}?status=COMPLETED" class="kpi-card text-decoration-none" style="--kpi-color:#22d3a5;--kpi-r:34;--kpi-g:211;--kpi-b:165;cursor:pointer;">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-value">{{ tasks_by_status.completed }}</div>
+        <div class="kpi-label">Completed Tasks</div>
+      </div>
+      <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
+    </div>
+  </a>
+
+</div>
+
+<!-- Main content grid -->
+<div class="row g-4">
+
+  <!-- Tasks due this week -->
+  <div class="col-lg-6">
+    <div class="table-card h-100">
+      <div class="section-hd">
+        <div>
+          <div class="section-hd-title"><i class="bi bi-list-task me-2" style="color:var(--accent);"></i>Tasks Due This Week</div>
+        </div>
+        <a href="{% url 'tasks:task_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+      </div>
+      {% if upcoming_tasks %}
+        {% for task in upcoming_tasks %}
+        <div class="task-row priority-{{ task.priority|lower }}">
+          <div style="min-width:0;">
+            <a href="{{ task.get_absolute_url }}" class="task-title">{{ task.title }}</a>
+            {% if task.project %}<div class="task-sub"><i class="bi bi-folder2 me-1"></i>{{ task.project.name }}</div>{% endif %}
+            <div class="task-date">Due {{ task.end_date|date:"d M" }}</div>
+          </div>
+          <div class="text-end flex-shrink-0">
+            <span class="badge bg-{{ task.status_color }}-subtle text-{{ task.status_color }} border border-{{ task.status_color }}-subtle">
+              {{ task.get_status_display }}
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state">
+        <i class="bi bi-check2-all" style="color:var(--success);"></i>
+        <p>No tasks due this week</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Upcoming events -->
+  <div class="col-lg-6">
+    <div class="table-card h-100">
+      <div class="section-hd">
+        <div>
+          <div class="section-hd-title"><i class="bi bi-calendar-event me-2" style="color:var(--info);"></i>Upcoming Events</div>
+        </div>
+        <a href="{% url 'notifications:event_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+      </div>
+      {% if upcoming_events %}
+        {% for event in upcoming_events %}
+        <div class="event-row">
+          <div class="event-icon bg-info-subtle text-info">
+            {% if event.event_type == 'MEETING' %}<i class="bi bi-camera-video"></i>
+            {% elif event.event_type == 'INTERVIEW' %}<i class="bi bi-person-badge"></i>
+            {% else %}<i class="bi bi-bell"></i>{% endif %}
+          </div>
+          <div style="min-width:0;flex:1;">
+            <a href="{{ event.get_absolute_url }}" class="task-title">{{ event.title }}</a>
+            <div class="task-sub" style="font-family:'IBM Plex Mono',monospace;font-size:11px;">{{ event.event_datetime|date:"d M Y, g:i A" }}</div>
+            {% if event.location %}<div class="task-sub"><i class="bi bi-geo-alt me-1"></i>{{ event.location }}</div>{% endif %}
+          </div>
+          <span class="badge bg-info-subtle text-info border border-info-subtle flex-shrink-0">{{ event.get_event_type_display }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state">
+        <i class="bi bi-calendar-x" style="color:var(--info);"></i>
+        <p>No upcoming events</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- AMC expiring alerts -->
+  {% if amc_expiring %}
+  <div class="col-lg-6">
+    <div class="table-card">
+      <div class="section-hd">
+        <div>
+          <div class="section-hd-title"><i class="bi bi-exclamation-triangle me-2" style="color:var(--warning);"></i>AMC Expiring Soon</div>
+        </div>
+        <a href="{% url 'amc:amc_list' %}?status=expiring" class="btn btn-sm btn-outline-warning">View All</a>
+      </div>
+        {% for amc in amc_expiring %}
+        <div class="amc-row">
+          <div>
+            <a href="{{ amc.get_absolute_url }}" class="task-title">{{ amc.project.name }}</a>
+            <div class="task-sub" style="font-family:'IBM Plex Mono',monospace;font-size:11px;">Expires {{ amc.amc_end_date|date:"d M Y" }}</div>
+          </div>
+          <span class="badge {% if amc.days_to_expiry <= 7 %}bg-danger-subtle text-danger border border-danger-subtle{% else %}bg-warning-subtle text-warning border border-warning-subtle{% endif %}" style="font-family:'IBM Plex Mono',monospace;">
+            {{ amc.days_to_expiry }}d
+          </span>
+        </div>
+        {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Expense chart -->
+  <div class="col-lg-{% if amc_expiring %}6{% else %}12{% endif %}">
+    <div class="table-card">
+      <div class="section-hd">
+        <div class="section-hd-title"><i class="bi bi-pie-chart me-2" style="color:var(--accent-2);"></i>Monthly Expenses by Category</div>
+      </div>
+      <div style="padding:20px 16px; height:300px;">
+        <canvas id="expenseChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subscription payments due -->
+  {% if subscriptions_due %}
+  <div class="col-lg-6">
+    <div class="table-card">
+      <div class="section-hd">
+        <div>
+          <div class="section-hd-title"><i class="bi bi-credit-card me-2" style="color:var(--warning);"></i>Subscription Payments Due</div>
+        </div>
+        <a href="{% url 'billing:subscription_list' %}" class="btn btn-sm btn-outline-warning">View All</a>
+      </div>
+      {% for sub in subscriptions_due %}
+      <div class="amc-row">
+        <div>
+          <a href="{{ sub.get_absolute_url }}" class="task-title">{{ sub.name }}</a>
+          <div class="task-sub" style="font-family:'IBM Plex Mono',monospace;font-size:11px;">
+            {{ sub.currency }} {{ sub.cost|floatformat:0 }} — renews {{ sub.next_renewal_date|date:"d M Y" }}
+          </div>
+        </div>
+        <span class="badge {% if sub.is_overdue %}bg-danger-subtle text-danger border border-danger-subtle{% else %}bg-warning-subtle text-warning border border-warning-subtle{% endif %}" style="font-family:'IBM Plex Mono',monospace;">
+          {% if sub.is_overdue %}overdue{% else %}{{ sub.days_to_renewal }}d{% endif %}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recent activity -->
+  <div class="col-12">
+    <div class="table-card">
+      <div class="section-hd">
+        <div class="section-hd-title"><i class="bi bi-activity me-2" style="color:var(--success);"></i>Recent Activity</div>
+      </div>
+      <div style="padding:16px 20px;">
+        {% if recent_activity %}
+        <div class="timeline">
+          {% for entry in recent_activity %}
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <div>
+                <span style="font-size:13px;font-weight:600;color:var(--text);">{{ entry.user.name|default:entry.user.email|default:"System" }}</span>
+                <span style="font-size:13px;color:var(--text-2);"> — {{ entry.description }}</span>
+              </div>
+              <span style="font-size:11px;color:var(--text-3);white-space:nowrap;font-family:'IBM Plex Mono',monospace;">{{ entry.timestamp|timesince }} ago</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:20px 0;">
+          <i class="bi bi-clock-history" style="color:var(--text-3);"></i>
+          <p>No recent activity</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const labels = {{ chart_labels|safe }};
+  const values = {{ chart_values|safe }};
+
+  const container = document.getElementById('expenseChart');
+  if (!labels.length || !container) {
+    if (container) container.parentElement.innerHTML =
+      '<div class="empty-state"><i class="bi bi-pie-chart" style="color:var(--text-3);"></i><p>No expenses this month</p></div>';
+    return;
+  }
+
+  // Refined, muted palette — sophisticated, not crayon
+  const palette = [
+    '#3b82f6','#10b981','#f59e0b','#ef4444',
+    '#8b5cf6','#06b6d4','#f97316','#64748b',
+  ];
+
+  // Compute total for centre label
+  const total = values.reduce((a, b) => a + b, 0);
+  const fmt = v => '₹' + (v >= 100000
+    ? (v/100000).toFixed(1) + 'L'
+    : v >= 1000 ? (v/1000).toFixed(1) + 'K' : v);
+
+  // Centre-label plugin
+  const centreLabel = {
+    id: 'centreLabel',
+    beforeDraw(chart) {
+      const { chartArea, ctx } = chart;
+      const cx = (chartArea.left + chartArea.right)  / 2;
+      const cy = (chartArea.top  + chartArea.bottom) / 2;
+      ctx.save();
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `600 15px Outfit, system-ui, sans-serif`;
+      ctx.fillStyle = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--text').trim() || '#dce8f8';
+      ctx.fillText(fmt(total), cx, cy - 9);
+      ctx.font = `400 11px Outfit, system-ui, sans-serif`;
+      ctx.fillStyle = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--text-3').trim() || '#3d526a';
+      ctx.fillText('This month', cx, cy + 9);
+      ctx.restore();
+    },
+  };
+
+  new Chart(container.getContext('2d'), {
+    type: 'doughnut',
+    plugins: [centreLabel],
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: palette.slice(0, labels.length),
+        borderWidth: 0,
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '72%',
+      animation: { duration: 600, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            usePointStyle: true,
+            pointStyle: 'circle',
+            boxWidth: 8,
+            boxHeight: 8,
+            padding: 16,
+            font: { size: 12, family: 'Outfit, system-ui, sans-serif' },
+            color: getComputedStyle(document.documentElement)
+                     .getPropertyValue('--text-2').trim() || '#7b92b0',
+            generateLabels(chart) {
+              const ds  = chart.data.datasets[0];
+              const tot = ds.data.reduce((a, b) => a + b, 0);
+              return chart.data.labels.map((lbl, i) => ({
+                text: `${lbl}  ${fmt(ds.data[i])}  (${Math.round(ds.data[i]/tot*100)}%)`,
+                fillStyle: ds.backgroundColor[i],
+                strokeStyle: 'transparent',
+                hidden: false,
+                index: i,
+              }));
+            },
+          },
+        },
+        tooltip: {
+          backgroundColor: 'rgba(13,21,37,0.92)',
+          borderColor: 'rgba(96,130,180,0.22)',
+          borderWidth: 1,
+          titleFont: { size: 13, family: 'Outfit', weight: '600' },
+          bodyFont:  { size: 12, family: 'Outfit' },
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            label(ctx) {
+              const v   = ctx.parsed;
+              const pct = Math.round(v / total * 100);
+              return `  ${fmt(v)}  (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+})();
+</script>
+{% endblock %}

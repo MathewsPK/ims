@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Projects{% endblock %}
+{% block page_title %}Projects{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Projects</li>
+{% endblock %}
+
+{% block content %}
+<!-- Toolbar -->
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'projects:project_list' %}?status=ALL" class="btn btn-sm {% if request.resolver_match.url_name == 'project_list' %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+    <a href="{% url 'projects:project_ongoing' %}" class="btn btn-sm {% if request.resolver_match.url_name == 'project_ongoing' %}btn-success{% else %}btn-outline-success{% endif %}">Ongoing</a>
+    <a href="{% url 'projects:project_completed' %}" class="btn btn-sm {% if request.resolver_match.url_name == 'project_completed' %}btn-info{% else %}btn-outline-info{% endif %}">Completed</a>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'projects:export_csv' %}" class="btn btn-outline-success btn-sm">
+      <i class="bi bi-download me-1"></i>Export CSV
+    </a>
+    {% if user.can_manage_projects %}
+    <a href="{% url 'projects:import_csv' %}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-upload me-1"></i>Import CSV
+    </a>
+    <a href="{% url 'projects:project_create' %}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i> New Project
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Filters -->
+<form method="get" class="row g-2 mb-4">
+  <div class="col-md-4">
+    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by name, client, location…">
+  </div>
+  <div class="col-md-3">
+    <select name="status" class="form-select" onchange="this.form.submit()">
+      <option value="ALL" {% if selected_status == '' %}selected{% endif %}>All Statuses</option>
+      {% for val, label in status_choices %}
+      <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select name="sort" class="form-select" onchange="this.form.submit()">
+      <option value="" {% if selected_sort == '' %}selected{% endif %}>Sort: Newest Added</option>
+      <option value="start_desc" {% if selected_sort == 'start_desc' %}selected{% endif %}>Start Date ↓ Newest</option>
+      <option value="start_asc"  {% if selected_sort == 'start_asc'  %}selected{% endif %}>Start Date ↑ Oldest</option>
+      <option value="end_desc"   {% if selected_sort == 'end_desc'   %}selected{% endif %}>End Date ↓ Newest</option>
+      <option value="end_asc"    {% if selected_sort == 'end_asc'    %}selected{% endif %}>End Date ↑ Oldest</option>
+      <option value="name_asc"   {% if selected_sort == 'name_asc'   %}selected{% endif %}>Name A → Z</option>
+      <option value="name_desc"  {% if selected_sort == 'name_desc'  %}selected{% endif %}>Name Z → A</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+    <a href="{% url 'projects:project_list' %}?status=ALL" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a>
+  </div>
+</form>
+
+<!-- Project cards -->
+{% if projects %}
+<div class="row g-3">
+  {% for project in projects %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card h-100 border-0 shadow-sm ims-card" style="border-radius:14px;overflow:hidden;position:relative;">
+      <!-- Status stripe -->
+      <div style="height:4px;background:{% if project.status == 'ONGOING' %}#10b981{% elif project.status == 'COMPLETED' %}#64748b{% elif project.status == 'ON_HOLD' %}#f59e0b{% else %}#3b82f6{% endif %};"></div>
+      <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between mb-2">
+          <div>
+            <h6 class="fw-bold mb-0">
+              <a href="{% url 'projects:project_detail' project.pk %}" class="stretched-link text-decoration-none" style="color:var(--text);">{{ project.name }}</a>
+            </h6>
+            <div class="text-muted small">{{ project.client }}</div>
+          </div>
+          <span class="badge
+            {% if project.status == 'ONGOING' %}bg-success-subtle text-success border border-success-subtle
+            {% elif project.status == 'COMPLETED' %}bg-secondary-subtle text-secondary border border-secondary-subtle
+            {% elif project.status == 'ON_HOLD' %}bg-warning-subtle text-warning border border-warning-subtle
+            {% else %}bg-primary-subtle text-primary border border-primary-subtle{% endif %}">
+            {{ project.get_status_display }}
+          </span>
+        </div>
+        {% if project.location %}
+        <div class="text-muted small mb-2"><i class="bi bi-geo-alt me-1"></i>{{ project.location }}</div>
+        {% endif %}
+        <div class="d-flex justify-content-between small text-muted">
+          <span><i class="bi bi-calendar3 me-1"></i>{{ project.start_date|date:"d M Y" }}</span>
+          {% if project.end_date %}<span>→ {{ project.end_date|date:"d M Y" }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="card-footer bg-transparent d-flex justify-content-between align-items-center py-2">
+        <div class="d-flex">
+          {% for u in project.assigned_users.all|slice:":4" %}
+          <div title="{{ u.name }}" style="width:26px;height:26px;border-radius:50%;background:#3b82f6;border:2px solid var(--surface);margin-left:{% if not forloop.first %}-8px{% else %}0{% endif %};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.7rem;z-index:{{ forloop.revcounter }};">{{ u.name|first|upper }}</div>
+          {% endfor %}
+        </div>
+        {% if user.can_manage_projects %}
+        <div class="d-flex gap-1" style="position:relative;z-index:2;">
+          <a href="{% url 'projects:project_update' project.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2"><i class="bi bi-pencil"></i></a>
+          <a href="{% url 'projects:project_delete' project.pk %}" class="btn btn-sm btn-outline-danger py-0 px-2"><i class="bi bi-trash"></i></a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ selected_status }}">Previous</a></li>
+    {% endif %}
+    <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ selected_status }}">Next</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-folder2 fs-1"></i>
+  <p class="mt-3">No projects found.</p>
+  {% if user.can_manage_projects %}
+  <a href="{% url 'projects:project_create' %}" class="btn btn-primary">Create First Project</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

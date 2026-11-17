@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block page_title %}{{ project.name }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'projects:project_list' %}">Projects</a></li>
+<li class="breadcrumb-item active">{{ project.name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Left: details -->
+  <div class="col-lg-8">
+    <!-- Header card -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div>
+            <h4 class="fw-bold mb-1">{{ project.name }}</h4>
+            <div class="text-muted">{{ project.client }}</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge
+              {% if project.status == 'ONGOING' %}bg-success-subtle text-success border border-success-subtle
+              {% elif project.status == 'COMPLETED' %}bg-secondary-subtle text-secondary border border-secondary-subtle
+              {% elif project.status == 'ON_HOLD' %}bg-warning-subtle text-warning border border-warning-subtle
+              {% else %}bg-primary-subtle text-primary border border-primary-subtle{% endif %}"
+              style="font-size:13px;padding:5px 12px;border-radius:20px;">
+              {{ project.get_status_display }}
+            </span>
+            {% if user.can_manage_projects %}
+            <a href="{% url 'projects:project_update' project.pk %}" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-pencil me-1"></i>Edit
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          {% if project.location %}
+          <div class="col-sm-6">
+            <div class="text-muted small">Location</div>
+            <div><i class="bi bi-geo-alt me-1 text-primary"></i>{{ project.location }}</div>
+          </div>
+          {% endif %}
+          <div class="col-sm-6">
+            <div class="text-muted small">Start Date</div>
+            <div><i class="bi bi-calendar3 me-1 text-primary"></i>{{ project.start_date|date:"d M Y" }}</div>
+          </div>
+          {% if project.end_date %}
+          <div class="col-sm-6">
+            <div class="text-muted small">End Date</div>
+            <div><i class="bi bi-calendar-check me-1 text-primary"></i>{{ project.end_date|date:"d M Y" }}</div>
+          </div>
+          {% endif %}
+          <div class="col-sm-6">
+            <div class="text-muted small">Created by</div>
+            <div>{{ project.created_by.name|default:"—" }}</div>
+          </div>
+        </div>
+
+        {% if project.description %}
+        <div class="border-top pt-3">
+          <div class="text-muted small mb-1">Description</div>
+          <p class="mb-0">{{ project.description }}</p>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <!-- Tasks on this project -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Tasks</span>
+        <a href="{% url 'tasks:task_create' %}?project={{ project.pk }}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-plus"></i> Add Task
+        </a>
+      </div>
+      {% if tasks %}
+      <ul class="list-group list-group-flush">
+        {% for task in tasks %}
+        <li class="list-group-item priority-{{ task.priority|lower }}">
+          <div class="d-flex align-items-center justify-content-between py-1">
+            <div>
+              <a href="{{ task.get_absolute_url }}" class="fw-semibold text-dark text-decoration-none">{{ task.title }}</a>
+              {% if task.assigned_to %}
+              <span class="text-muted small ms-2">→ {{ task.assigned_to.name }}</span>
+              {% endif %}
+            </div>
+            <span class="badge bg-{{ task.status_color }}-subtle text-{{ task.status_color }} border border-{{ task.status_color }}-subtle">
+              {{ task.get_status_display }}
+            </span>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="p-4 text-center text-muted small">No tasks yet</div>
+      {% endif %}
+    </div>
+
+    <!-- Task Timeline / Gantt -->
+    {% if tasks %}
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;overflow:hidden;">
+      <div class="card-header bg-transparent d-flex align-items-center gap-2">
+        <i class="bi bi-bar-chart-steps" style="color:var(--accent-2);"></i>
+        <span class="fw-semibold">Task Timeline</span>
+      </div>
+      <div class="card-body" style="padding:16px 20px;">
+        <div id="gantt-container" style="overflow-x:auto;"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Photos -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Photos</span>
+        {% if user.can_manage_projects %}
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+          <i class="bi bi-upload me-1"></i>Upload
+        </button>
+        {% endif %}
+      </div>
+      {% if media %}
+      <div class="card-body">
+        <div class="row g-2">
+          {% for m in media %}
+          <div class="col-4 col-md-3">
+            <a href="{{ m.image.url }}" target="_blank">
+              <img src="{{ m.image.url }}" class="img-fluid rounded" style="height:100px;width:100%;object-fit:cover;" alt="{{ m.caption }}">
+            </a>
+            {% if m.caption %}<p class="small text-muted mt-1 mb-0">{{ m.caption }}</p>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <div class="p-4 text-center text-muted small">No photos uploaded yet</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right: sidebar info -->
+  <div class="col-lg-4">
+    <!-- Assigned users -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-header bg-transparent fw-semibold">Team</div>
+      <ul class="list-group list-group-flush">
+        {% for u in project.assigned_users.all %}
+        <li class="list-group-item d-flex align-items-center gap-2 py-2">
+          <div style="width:32px;height:32px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem;">
+            {{ u.name|first|upper }}
+          </div>
+          <div>
+            <div class="fw-semibold small">{{ u.name }}</div>
+            <div class="text-muted" style="font-size:.7rem;">{{ u.get_role_display }}</div>
+          </div>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted small text-center py-3">No team members assigned</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Activity timeline -->
+    <div class="card border-0 shadow-sm" style="border-radius:14px;">
+      <div class="card-header bg-transparent fw-semibold">Activity Timeline</div>
+      <div class="card-body">
+        {% if timeline %}
+        <div class="timeline">
+          {% for entry in timeline %}
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="small">
+              <span class="fw-semibold">{{ entry.user.name|default:"System" }}</span>
+              <span class="text-muted"> {{ entry.description }}</span>
+              <div class="text-muted" style="font-size:.7rem;">{{ entry.timestamp|date:"d M Y, H:i" }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted small text-center mb-0">No activity yet</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload modal -->
+{% if user.can_manage_projects %}
+<div class="modal fade" id="uploadModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Upload Photo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" enctype="multipart/form-data" action="{% url 'projects:upload_media' project.pk %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Image</label>
+            <input type="file" name="image" class="form-control" accept="image/*" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Caption</label>
+            <input type="text" name="caption" class="form-control" placeholder="Optional">
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if tasks %}
+<script>
+(function() {
+  const tasks = [
+    {% for task in tasks %}
+    {
+      title: "{{ task.title|escapejs }}",
+      start: "{{ task.start_date|date:'Y-m-d' }}",
+      end:   "{{ task.end_date|date:'Y-m-d' }}",
+      status: "{{ task.status }}",
+      color:  "{{ task.status_color }}",
+      assignee: "{{ task.assigned_to.name|default:''|escapejs }}",
+      url: "{{ task.get_absolute_url }}",
+    },
+    {% endfor %}
+  ];
+
+  if (!tasks.length) return;
+
+  // Build date range
+  const allDates = tasks.flatMap(t => [new Date(t.start), new Date(t.end)]);
+  let minD = new Date(Math.min(...allDates));
+  let maxD = new Date(Math.max(...allDates));
+  // pad by 2 days each side
+  minD.setDate(minD.getDate() - 2);
+  maxD.setDate(maxD.getDate() + 2);
+
+  const totalDays = Math.ceil((maxD - minD) / 86400000);
+  const ROW_H = 36, LABEL_W = 180, BAR_H = 20, HEADER_H = 34;
+
+  const colorMap = {
+    primary: 'var(--accent)',
+    success: 'var(--success)',
+    warning: 'var(--warning)',
+    danger:  'var(--danger)',
+    secondary: 'var(--text-3)',
+  };
+
+  const svgW = Math.max(600, LABEL_W + totalDays * 22);
+  const svgH = HEADER_H + tasks.length * ROW_H + 10;
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" style="font-family:Outfit,system-ui,sans-serif;display:block;">`;
+
+  // Background
+  svg += `<rect width="${svgW}" height="${svgH}" fill="var(--surface)" rx="8"/>`;
+
+  // Header
+  svg += `<rect width="${svgW}" height="${HEADER_H}" fill="var(--surface-2)" rx="0"/>`;
+  svg += `<text x="10" y="22" font-size="11" fill="var(--text-3)" font-weight="600" text-transform="uppercase" letter-spacing="1">TASK</text>`;
+
+  // Month labels
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let curMonth = -1;
+  for (let d = 0; d < totalDays; d++) {
+    const date = new Date(minD); date.setDate(date.getDate() + d);
+    const x = LABEL_W + d * 22;
+    if (date.getMonth() !== curMonth) {
+      curMonth = date.getMonth();
+      svg += `<text x="${x+2}" y="14" font-size="9" fill="var(--text-3)">${months[curMonth]} ${date.getFullYear()}</text>`;
+    }
+    if (date.getDate() === 1 || date.getDate() % 5 === 0) {
+      svg += `<text x="${x+2}" y="28" font-size="9" fill="var(--text-3)">${date.getDate()}</text>`;
+    }
+    // Weekend shading
+    const dow = date.getDay();
+    if (dow === 0 || dow === 6) {
+      svg += `<rect x="${x}" y="${HEADER_H}" width="22" height="${svgH - HEADER_H}" fill="rgba(255,255,255,0.025)"/>`;
+    }
+  }
+
+  // Grid lines + task rows
+  tasks.forEach((task, i) => {
+    const y = HEADER_H + i * ROW_H;
+    const rowFill = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)';
+    svg += `<rect x="0" y="${y}" width="${svgW}" height="${ROW_H}" fill="${rowFill}"/>`;
+
+    // Label
+    const labelText = task.title.length > 22 ? task.title.slice(0,20)+'…' : task.title;
+    svg += `<text x="10" y="${y + ROW_H/2 + 4}" font-size="12" fill="var(--text-2)">${labelText}</text>`;
+    if (task.assignee) {
+      svg += `<text x="${LABEL_W - 5}" y="${y + ROW_H/2 + 4}" font-size="10" fill="var(--text-3)" text-anchor="end">${task.assignee.split(' ')[0]}</text>`;
+    }
+
+    // Separator
+    svg += `<line x1="0" y1="${y + ROW_H}" x2="${svgW}" y2="${y + ROW_H}" stroke="var(--border)" stroke-width="1"/>`;
+
+    // Bar
+    const startD = new Date(task.start);
+    const endD   = new Date(task.end);
+    const startOff = Math.max(0, Math.ceil((startD - minD) / 86400000));
+    const endOff   = Math.min(totalDays, Math.ceil((endD - minD) / 86400000) + 1);
+    const bx = LABEL_W + startOff * 22;
+    const bw = Math.max(22, (endOff - startOff) * 22);
+    const by = y + (ROW_H - BAR_H) / 2;
+    const barColor = colorMap[task.color] || 'var(--accent)';
+    svg += `<a href="${task.url}">`;
+    svg += `<rect x="${bx}" y="${by}" width="${bw}" height="${BAR_H}" rx="4" fill="${barColor}" fill-opacity="0.85"/>`;
+    svg += `</a>`;
+
+    // Label on bar if wide enough
+    if (bw > 50) {
+      const barLabel = task.title.length > Math.floor(bw/7) ? task.title.slice(0, Math.floor(bw/7)-1)+'…' : task.title;
+      svg += `<text x="${bx+6}" y="${by+13}" font-size="10" fill="#fff" font-weight="500">${barLabel}</text>`;
+    }
+  });
+
+  // Left border on label column
+  svg += `<line x1="${LABEL_W}" y1="0" x2="${LABEL_W}" y2="${svgH}" stroke="var(--border)" stroke-width="1"/>`;
+  svg += `</svg>`;
+  document.getElementById('gantt-container').innerHTML = svg;
+})();
+</script>
+{% endif %}
+{% endblock %}

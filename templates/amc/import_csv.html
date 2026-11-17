@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Import Equipment CSV{% endblock %}
+{% block page_title %}Import Equipment from CSV{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'amc:amc_list' %}">AMC</a></li>
+<li class="breadcrumb-item active">Import CSV</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <!-- Upload card -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-body p-4">
+        <h5 class="fw-bold mb-1">Upload Equipment CSV</h5>
+        <p class="text-muted small mb-4">
+          Upload a CSV file in the standard equipment format. Projects and AMC contracts are
+          created automatically if they don't already exist. Existing records are skipped (safe to re-import).
+        </p>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">CSV File *</label>
+            <input type="file" name="csv_file" accept=".csv" class="form-control" required>
+          </div>
+          <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" name="dry_run" id="dry_run">
+            <label class="form-check-label small" for="dry_run">
+              <strong>Dry run</strong> — preview results without saving to database
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-upload me-2"></i>Import
+          </button>
+          <a href="{% url 'amc:amc_list' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+        </form>
+      </div>
+    </div>
+
+    <!-- Expected format -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+      <div class="card-header bg-transparent fw-semibold small">Expected CSV Columns</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0 small">
+            <thead class="table-light">
+              <tr><th>Column</th><th>Required</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>amc_contract_number</code></td><td>—</td><td>Groups equipment under an AMC contract</td></tr>
+              <tr><td><code>name</code></td><td class="text-danger fw-bold">Yes</td><td>Equipment name</td></tr>
+              <tr><td><code>brand</code></td><td>—</td><td>e.g. Dell, Epson</td></tr>
+              <tr><td><code>model_number</code></td><td>—</td><td></td></tr>
+              <tr><td><code>serial_number</code></td><td>—</td><td></td></tr>
+              <tr><td><code>location</code></td><td>—</td><td>e.g. Gallery 1, Reception</td></tr>
+              <tr><td><code>installation_date</code></td><td>—</td><td>dd-mm-yyyy or dd-Mon-yyyy</td></tr>
+              <tr><td><code>warranty_expiry</code></td><td>—</td><td></td></tr>
+              <tr><td><code>amc_date</code></td><td>—</td><td>AMC start date</td></tr>
+              <tr><td><code>amc_end_date</code></td><td>—</td><td>Equipment-level AMC end date</td></tr>
+              <tr><td><code>invoice_date</code></td><td>—</td><td></td></tr>
+              <tr><td><code>invoice_no.</code></td><td>—</td><td>Invoice number</td></tr>
+              <tr><td><code>client</code></td><td>—</td><td>Used when creating new projects</td></tr>
+              <tr><td><code>project</code></td><td class="text-danger fw-bold">Yes</td><td>Project name — created if not found</td></tr>
+              <tr><td><code>win_license</code></td><td>—</td><td>Windows license key</td></tr>
+              <tr><td><code>notes</code></td><td>—</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    {% if results is not None %}
+    <div class="card border-0 shadow-sm" style="border-radius:14px;">
+      <div class="card-header bg-transparent fw-semibold d-flex align-items-center gap-2">
+        {% if results.dry_run %}
+          <span class="badge bg-warning text-dark">Dry Run</span>
+        {% else %}
+          <span class="badge bg-success">Imported</span>
+        {% endif %}
+        Results
+      </div>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          <div class="col-sm-4 text-center">
+            <div class="fs-2 fw-bold text-success">{{ results.created }}</div>
+            <div class="text-muted small">{% if results.dry_run %}Would import{% else %}Created{% endif %}</div>
+          </div>
+          <div class="col-sm-4 text-center">
+            <div class="fs-2 fw-bold text-secondary">{{ results.skipped }}</div>
+            <div class="text-muted small">Skipped / Already exist</div>
+          </div>
+          <div class="col-sm-4 text-center">
+            <div class="fs-2 fw-bold {% if results.errors %}text-danger{% else %}text-muted{% endif %}">{{ results.errors|length }}</div>
+            <div class="text-muted small">Errors</div>
+          </div>
+        </div>
+
+        {% if results.errors %}
+        <div class="border-top pt-3">
+          <p class="fw-semibold small text-danger mb-2">Errors ({{ results.errors|length }}):</p>
+          <ul class="list-unstyled mb-0">
+            {% for err in results.errors %}
+            <li class="small text-danger mb-1"><i class="bi bi-exclamation-circle me-1"></i>{{ err }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        {% if results.dry_run and results.created %}
+        <div class="border-top pt-3 mt-3">
+          <p class="text-muted small mb-2">This was a dry run. To actually import, uncheck "Dry run" and upload again.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Project{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Edit Project{% else %}New Project{% endif %}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'projects:project_list' %}">Projects</a></li>
+<li class="breadcrumb-item active">{% if form.instance.pk %}Edit{% else %}New{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="form-card">
+      <h5 class="fw-bold mb-4">{% if form.instance.pk %}Edit Project{% else %}Create New Project{% endif %}</h5>
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Project Name *</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Client *</label>
+            {{ form.client }}
+            {% if form.client.errors %}<div class="text-danger small">{{ form.client.errors }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Location</label>
+            {{ form.location }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Status</label>
+            {{ form.status }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Start Date *</label>
+            {{ form.start_date }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">End Date</label>
+            {{ form.end_date }}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Description</label>
+            {{ form.description }}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Assign Team Members</label>
+            {{ form.assigned_users }}
+            <div class="form-text">Hold Ctrl/Cmd to select multiple</div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+          <a href="{% url 'projects:project_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check2 me-1"></i>Save Project
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

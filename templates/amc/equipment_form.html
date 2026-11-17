@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Equipment{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Edit Equipment{% else %}Add Equipment{% endif %}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'amc:amc_list' %}">AMC</a></li>
+<li class="breadcrumb-item active">Equipment</li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="form-card">
+      <h5 class="fw-bold mb-4">{% if form.instance.pk %}Edit Equipment{% else %}Add Equipment{% endif %}</h5>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label fw-semibold small">AMC Contract *</label>{{ form.amc_project }}</div>
+
+          <div class="col-12"><hr class="my-1"><p class="text-muted small fw-semibold text-uppercase mb-0">Device Details</p></div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">Equipment Name *</label>{{ form.name }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">Brand</label>{{ form.brand }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">Model Number</label>{{ form.model_number }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">Serial Number</label>{{ form.serial_number }}</div>
+          <div class="col-12"><label class="form-label fw-semibold small">Location</label>{{ form.location }}</div>
+
+          <div class="col-12"><hr class="my-1"><p class="text-muted small fw-semibold text-uppercase mb-0">Dates</p></div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">Installation Date</label>{{ form.installation_date }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">Warranty Expiry</label>{{ form.warranty_expiry }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">AMC Start Date</label>{{ form.amc_date }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">AMC End Date</label>{{ form.amc_end_date }}</div>
+
+          <div class="col-12"><hr class="my-1"><p class="text-muted small fw-semibold text-uppercase mb-0">Invoice</p></div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">Invoice Date</label>{{ form.invoice_date }}</div>
+          <div class="col-md-6"><label class="form-label fw-semibold small">Invoice No.</label>{{ form.invoice_no }}</div>
+
+          <div class="col-12"><hr class="my-1"><p class="text-muted small fw-semibold text-uppercase mb-0">Software</p></div>
+          <div class="col-12"><label class="form-label fw-semibold small">Windows License Key</label>{{ form.win_license }}</div>
+
+          <div class="col-12"><hr class="my-1"><p class="text-muted small fw-semibold text-uppercase mb-0">Notes</p></div>
+          <div class="col-12">{{ form.notes }}</div>
+        </div>
+        <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+          <a href="{% url 'amc:amc_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check2 me-1"></i>Save Equipment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
